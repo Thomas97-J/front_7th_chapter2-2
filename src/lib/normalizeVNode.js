@@ -33,6 +33,14 @@ export function normalizeVNode(vNode) {
   // Step 5: 객체(VNode) 처리
   if (typeof vNode === "object") {
     const { type, props, children } = vNode;
+    // ✅ input 요소만 추적
+    if (type === "input") {
+      console.log("[normalizeVNode] input BEFORE - props:", props);
+      console.log(
+        "[normalizeVNode] input BEFORE - onKeyDown:",
+        props?.onKeyDown,
+      );
+    }
 
     // Step 5-1: 함수형 컴포넌트 처리
     // 함수를 호출하여 반환된 VNode를 재귀적으로 정규화

@@ -1,5 +1,5 @@
 // 요소별 이벤트 핸들러를 저장하는 WeakMap
-const eventHandlers = new WeakMap();
+const eventHandlers = new Map();
 
 /**
  * 요소에 이벤트 핸들러 등록
@@ -8,25 +8,35 @@ const eventHandlers = new WeakMap();
  * @param {Function} handler - 이벤트 핸들러 함수
  */
 export function addEvent(element, eventType, handler) {
-  // Step 1: 이벤트 타입 정규화 (click, onChange 등에서 앞의 'on' 제거)
   const normalizedType = eventType.startsWith("on")
     ? eventType.slice(2).toLowerCase()
     : eventType.toLowerCase();
 
-  // Step 2: 요소의 핸들러 맵 생성 (없으면 생성)
+  if (normalizedType === "keydown") {
+    // ✅ keydown만 로깅
+    console.log(`[addEvent] type: ${normalizedType}, element:`, element);
+  }
+
   if (!eventHandlers.has(element)) {
     eventHandlers.set(element, {});
   }
 
   const handlers = eventHandlers.get(element);
 
-  // Step 3: 해당 이벤트 타입의 핸들러 배열 생성 (없으면 생성)
   if (!handlers[normalizedType]) {
     handlers[normalizedType] = [];
   }
 
-  // Step 4: 핸들러 추가
-  handlers[normalizedType].push(handler);
+  if (!handlers[normalizedType].includes(handler)) {
+    handlers[normalizedType].push(handler);
+    if (normalizedType === "keydown") {
+      // ✅ keydown만 로깅
+      console.log(
+        `[addEvent] keydown 핸들러 등록 완료:`,
+        handlers[normalizedType],
+      );
+    }
+  }
 }
 
 /**
@@ -35,11 +45,15 @@ export function addEvent(element, eventType, handler) {
  * @param {string} eventType - 이벤트 타입
  * @param {Function} handler - 제거할 이벤트 핸들러
  */
-export function removeEvent(element, eventType, handler) {
+export function removeEvent(element, eventType) {
   // Step 1: 이벤트 타입 정규화
   const normalizedType = eventType.startsWith("on")
     ? eventType.slice(2).toLowerCase()
     : eventType.toLowerCase();
+
+  if (normalizedType === "keydown") {
+    console.log(`[removeEvent] keydown 제거`);
+  }
 
   // Step 2: 해당 요소의 핸들러 조회
   if (!eventHandlers.has(element)) {
@@ -51,10 +65,11 @@ export function removeEvent(element, eventType, handler) {
     return;
   }
 
-  // Step 3: 핸들러 배열에서 제거
-  const index = handlers[normalizedType].indexOf(handler);
-  if (index > -1) {
-    handlers[normalizedType].splice(index, 1);
+  // ✅ 해당 이벤트의 모든 핸들러 제거 (새로운 함수가 등록될 예정)
+  handlers[normalizedType] = [];
+
+  if (normalizedType === "keydown") {
+    console.log(`[removeEvent] keydown 모든 핸들러 제거 완료`);
   }
 }
 
@@ -64,9 +79,12 @@ export function removeEvent(element, eventType, handler) {
  * @param {HTMLElement} root - 루트 요소
  */
 export function setupEventListeners(root) {
-  if (!root) return;
+  if (!root) {
+    return;
+  }
 
-  // Step 1: 자주 사용되는 이벤트들에 대해 위임 리스너 등록
+  console.log(`[setupEventListeners] 시작, root:`, root);
+
   const eventTypes = [
     "click",
     "change",
@@ -77,36 +95,52 @@ export function setupEventListeners(root) {
   ];
 
   eventTypes.forEach((eventType) => {
-    // 이미 등록된 위임 리스너 확인 (중복 등록 방지)
     if (root._delegatedListeners && root._delegatedListeners[eventType]) {
+      if (eventType === "keydown") {
+        // ✅ keydown만 로깅
+        console.log(`[setupEventListeners] ${eventType} 이미 등록됨`);
+      }
       return;
     }
 
-    // 위임 리스너 생성
     const delegatedListener = (event) => {
-      let target = event.target;
+      if (eventType === "keydown") {
+        // ✅ keydown만 로깅
+        console.log(
+          `[delegatedListener] ${eventType} 이벤트 발생:`,
+          event.target,
+          eventHandlers,
+        );
+      }
 
-      // Step 2: 이벤트 대상에서 root까지 순회하며 핸들러 찾기
+      let target = event.target;
       while (target && target !== root) {
-        // target 요소에 등록된 핸들러 확인
         if (eventHandlers.has(target)) {
           const handlers = eventHandlers.get(target);
           if (handlers[eventType]) {
-            // Step 3: 모든 핸들러 실행
+            if (eventType === "keydown") {
+              // ✅ keydown만 로깅
+              console.log(
+                `[delegatedListener] keydown 핸들러 실행:`,
+                handlers[eventType].length,
+              );
+            }
             handlers[eventType].forEach((handler) => {
               handler(event);
             });
           }
         }
-
         target = target.parentNode;
       }
     };
 
-    // Step 4: root에 위임 리스너 등록 (capture 단계는 아님, bubble 단계)
     root.addEventListener(eventType, delegatedListener, false);
 
-    // Step 5: 위임 리스너 정보 저장 (추후 제거 시 사용)
+    if (eventType === "keydown") {
+      // ✅ keydown만 로깅
+      console.log(`[setupEventListeners] ${eventType} 위임 리스너 등록 완료`);
+    }
+
     if (!root._delegatedListeners) {
       root._delegatedListeners = {};
     }

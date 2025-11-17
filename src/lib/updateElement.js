@@ -13,13 +13,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
   const oldProps = originOldProps || {};
 
   // 이전 props에서 새로운 props에 없는 것들 제거
-  Object.entries(oldProps).forEach(([key, oldValue]) => {
-    if (key.startsWith("on")) {
-      const eventType = key.slice(2).toLowerCase();
-      removeEvent(target, eventType, oldValue);
-      return;
-    }
-
+  Object.entries(oldProps).forEach(([key]) => {
     if (key === "key" || key === "ref" || key === "children") {
       return;
     }
@@ -47,8 +41,9 @@ function updateAttributes(target, originNewProps, originOldProps) {
 
     if (key.startsWith("on")) {
       const eventType = key.slice(2).toLowerCase();
+      console.log("eventType:", eventType, newValue);
       if (oldValue) {
-        removeEvent(target, eventType, oldValue);
+        removeEvent(target, eventType);
       }
       if (newValue) {
         addEvent(target, eventType, newValue);
@@ -111,12 +106,18 @@ function updateAttributes(target, originNewProps, originOldProps) {
  * @param {number} index - 자식 요소의 인덱스
  */
 export function updateElement(parentElement, newNode, oldNode, index = 0) {
+  if (newNode?.type === "input") {
+    console.log("[updateElement] input - onKeyDown:", newNode.props?.onKeyDown);
+  }
+
   if (!oldNode) {
+    console.log("[updateElement] oldNode 없음 - 새로 생성"); // ✅ 로그 5
     parentElement.appendChild(createElement(newNode));
     return;
   }
 
   if (!newNode) {
+    console.log("[updateElement] newNode 없음 - 제거"); // ✅ 로그 6
     const childNode = parentElement.childNodes[index];
     if (childNode) {
       parentElement.removeChild(childNode);
@@ -125,6 +126,7 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
   }
 
   if (typeof newNode === "string" && typeof oldNode === "string") {
+    console.log("[updateElement] 텍스트 노드 업데이트"); // ✅ 로그 7
     if (newNode !== oldNode) {
       parentElement.childNodes[index].textContent = newNode;
     }
@@ -132,6 +134,7 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
   }
 
   if (newNode.type !== oldNode.type) {
+    console.log("[updateElement] type 변경 - 요소 교체"); // ✅ 로그 8
     const newElement = createElement(newNode);
     const oldElement = parentElement.childNodes[index];
     if (oldElement) {
@@ -144,17 +147,30 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
 
   const $element = parentElement.childNodes[index];
   if (!$element) {
+    console.log("[updateElement] $element 없음"); // ✅ 로그 9
     parentElement.appendChild(createElement(newNode));
     return;
   }
 
+  console.log(
+    "[updateElement] updateAttributes 호출 전, newNode.props:",
+    newNode.props,
+  ); // ✅ 로그 10
   updateAttributes($element, newNode.props, oldNode.props);
 
   const newChildren = newNode.children || [];
   const oldChildren = oldNode.children || [];
-  const maxLength = Math.max(newChildren.length, oldChildren.length);
 
-  for (let i = 0; i < maxLength; i++) {
+  // 새로운 자식들 업데이트
+  for (let i = 0; i < newChildren.length; i++) {
     updateElement($element, newChildren[i], oldChildren[i], i);
+  }
+
+  // 초과된 기존 자식 요소 제거
+  for (let i = newChildren.length; i < oldChildren.length; i++) {
+    const childNode = $element.childNodes[newChildren.length];
+    if (childNode) {
+      $element.removeChild(childNode);
+    }
   }
 }

@@ -41,6 +41,11 @@ export function createElement(vNode) {
     if (typeof type === "string") {
       const $el = document.createElement(type);
 
+      if (type === "input") {
+        console.log("[createElement] type:", type, "props:", props); // ✅ 로그 1
+        //   console.log("[createElement] onKeyDown 확인:", props.onKeyDown); // ✅ 로그 2
+      }
+
       // Step 4-3: props 적용 (className, onClick, data-* 등)
       if (props) {
         updateAttributes($el, props);

@@ -21,6 +21,9 @@ function flattenDeep(arr) {
 }
 
 export function createVNode(type, props, ...children) {
+  if (type === "input") {
+    console.log("type", type, props);
+  }
   return {
     type,
     props,
