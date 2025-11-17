@@ -117,7 +117,10 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
   }
 
   if (!newNode) {
-    parentElement.removeChild(parentElement.childNodes[index]);
+    const childNode = parentElement.childNodes[index];
+    if (childNode) {
+      parentElement.removeChild(childNode);
+    }
     return;
   }
 
@@ -131,11 +134,20 @@ export function updateElement(parentElement, newNode, oldNode, index = 0) {
   if (newNode.type !== oldNode.type) {
     const newElement = createElement(newNode);
     const oldElement = parentElement.childNodes[index];
-    parentElement.replaceChild(newElement, oldElement);
+    if (oldElement) {
+      parentElement.replaceChild(newElement, oldElement);
+    } else {
+      parentElement.appendChild(newElement);
+    }
     return;
   }
 
   const $element = parentElement.childNodes[index];
+  if (!$element) {
+    parentElement.appendChild(createElement(newNode));
+    return;
+  }
+
   updateAttributes($element, newNode.props, oldNode.props);
 
   const newChildren = newNode.children || [];
