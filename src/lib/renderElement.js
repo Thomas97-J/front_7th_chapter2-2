@@ -12,7 +12,7 @@ import { updateElement } from "./updateElement";
  * @param {HTMLElement} container - 렌더링할 컨테이너
  */
 export function renderElement(vNode, container) {
-  // Step 1: VNode 정규화
+  // Step 1: VNode 정규화 (함수형 컴포넌트 실행, falsy 값 필터링)
   const normalizedVNode = normalizeVNode(vNode);
 
   // Step 2: 현재 container의 첫 번째 자식 노드 (기존 DOM)

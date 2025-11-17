@@ -29,11 +29,12 @@ export function createElement(vNode) {
   if (typeof vNode === "object") {
     const { type, props, children } = vNode;
 
-    // Step 4-1: 함수형 컴포넌트 처리
-    // 함수를 호출하여 VNode를 받고, 그 VNode를 다시 createElement로 처리
+    // Step 4-1: 함수형 컴포넌트 처리 - 오류 발생
+    // 함수형 컴포넌트는 normalizeVNode로 미리 정규화되어야 함
     if (typeof type === "function") {
-      const componentVNode = type(props);
-      return createElement(componentVNode);
+      throw new Error(
+        `컴포넌트는 반드시 normalizeVNode로 정규화된 후에 createElement를 호출해야 합니다. 받은 컴포넌트: ${type.name}`,
+      );
     }
 
     // Step 4-2: HTML 태그 요소 처리
@@ -48,9 +49,12 @@ export function createElement(vNode) {
       // Step 4-4: children 추가
       if (children && children.length > 0) {
         children.forEach((child) => {
-          const childNode = createElement(child);
-          if (childNode) {
-            $el.appendChild(childNode);
+          // undefined는 무시
+          if (child != null) {
+            const childNode = createElement(child);
+            if (childNode) {
+              $el.appendChild(childNode);
+            }
           }
         });
       }
