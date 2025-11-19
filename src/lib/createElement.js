@@ -36,6 +36,7 @@ export function createElement(vNode) {
 
   // Step 3: 배열 처리 (map으로 각 항목을 createElement 호출)
   if (Array.isArray(vNode)) {
+    //fragment 사용 - 노드들을 fragment안에 담아놓고 한번에 dom에 추가하기 위함
     const fragment = document.createDocumentFragment();
     vNode.forEach((node) => {
       fragment.appendChild(createElement(node));
@@ -58,11 +59,6 @@ export function createElement(vNode) {
     // Step 4-2: HTML 태그 요소 처리
     if (typeof type === "string") {
       const $el = document.createElement(type);
-
-      if (type === "input") {
-        console.log("[createElement] type:", type, "props:", props); // ✅ 로그 1
-        //   console.log("[createElement] onKeyDown 확인:", props.onKeyDown); // ✅ 로그 2
-      }
 
       // Step 4-3: props 적용 (className, onClick, data-* 등)
       if (props) {

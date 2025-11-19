@@ -20,6 +20,7 @@ function flattenDeep(arr) {
   }, []);
 }
 
+//이 함수가 jsx를 VNode로 변환(jsx 주석을 통해 명시적 지정)
 export function createVNode(type, props, ...children) {
   if (type === "input") {
     console.log("type", type, props);
