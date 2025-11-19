@@ -1,6 +1,24 @@
 import { addEvent, removeEvent } from "./eventManager";
 import { createElement } from "./createElement.js";
 
+// Boolean 속성 목록
+const BOOLEAN_PROPS = [
+  "checked",
+  "selected",
+  "disabled",
+  "readonly",
+  "readOnly",
+  "multiple",
+  "autofocus",
+  "required",
+  "autoplay",
+  "controls",
+  "loop",
+  "muted",
+  "default",
+  "open",
+];
+
 /**
  * DOM 요소의 속성을 업데이트
  * 새로운 props를 적용하고, 제거된 props는 삭제
@@ -13,18 +31,25 @@ function updateAttributes(target, originNewProps, originOldProps) {
   const oldProps = originOldProps || {};
 
   // 이전 props에서 새로운 props에 없는 것들 제거
-  Object.entries(oldProps).forEach(([key]) => {
-    const oldValue = oldProps[key];
-
+  Object.entries(oldProps).forEach(([key, oldValue]) => {
     if (key === "key" || key === "ref" || key === "children") {
       return;
     }
 
     if (!(key in newProps)) {
-      // ✅ 이벤트 핸들러 제거
+      // 이벤트 핸들러 제거
       if (key.startsWith("on")) {
         const eventType = key.slice(2).toLowerCase();
-        removeEvent(target, eventType, oldValue); // ← oldValue 추가
+        removeEvent(target, eventType, oldValue);
+        return;
+      }
+
+      // Boolean 속성 처리
+      const lowerKey = key.toLowerCase();
+      if (BOOLEAN_PROPS.includes(key) || BOOLEAN_PROPS.includes(lowerKey)) {
+        target[key] = false; // property로 설정
+        const attrName = key === "readOnly" ? "readonly" : lowerKey;
+        target.removeAttribute(attrName); // attribute 제거
         return;
       }
 
@@ -51,7 +76,6 @@ function updateAttributes(target, originNewProps, originOldProps) {
 
     if (key.startsWith("on")) {
       const eventType = key.slice(2).toLowerCase();
-      console.log("eventType:", eventType, newValue);
       if (oldValue) {
         removeEvent(target, eventType, oldValue);
       }
@@ -83,6 +107,27 @@ function updateAttributes(target, originNewProps, originOldProps) {
         target.setAttribute("style", newValue);
       } else {
         target.removeAttribute("style");
+      }
+      return;
+    }
+
+    // Boolean 속성 처리 (핵심!)
+    const lowerKey = key.toLowerCase();
+    if (BOOLEAN_PROPS.includes(key) || BOOLEAN_PROPS.includes(lowerKey)) {
+      // property로 직접 설정
+      target[key] = Boolean(newValue);
+
+      const attrName = key === "readOnly" ? "readonly" : lowerKey;
+
+      // disabled, readonly는 attribute도 설정 (true일 때만)
+      if (
+        newValue &&
+        (key === "disabled" || key === "readonly" || key === "readOnly")
+      ) {
+        target.setAttribute(attrName, "");
+      } else {
+        // checked, selected는 attribute 항상 제거
+        target.removeAttribute(attrName);
       }
       return;
     }

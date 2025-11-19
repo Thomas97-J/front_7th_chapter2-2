@@ -1,5 +1,23 @@
 import { addEvent } from "./eventManager";
 
+// Boolean 속성 목록
+const BOOLEAN_PROPS = [
+  "checked",
+  "selected",
+  "disabled",
+  "readonly",
+  "readOnly",
+  "multiple",
+  "autofocus",
+  "required",
+  "autoplay",
+  "controls",
+  "loop",
+  "muted",
+  "default",
+  "open",
+];
+
 /**
  * VNode를 실제 DOM 요소로 변환
  * @param {VNode} vNode - 변환할 VNode
@@ -114,6 +132,28 @@ function updateAttributes($el, props) {
     // Step 5: data-* 속성
     if (key.startsWith("data-")) {
       $el.setAttribute(key, value);
+      return;
+    }
+
+    // Step 5.5: Boolean 속성 처리
+    const lowerKey = key.toLowerCase();
+    if (BOOLEAN_PROPS.includes(key) || BOOLEAN_PROPS.includes(lowerKey)) {
+      // property로 직접 설정
+      $el[key] = Boolean(value);
+
+      const attrName = key === "readOnly" ? "readonly" : lowerKey;
+
+      // disabled, readonly는 attribute도 설정 (true일 때만)
+      if (
+        value &&
+        (key === "disabled" || key === "readonly" || key === "readOnly")
+      ) {
+        $el.setAttribute(attrName, "");
+      } else {
+        // checked, selected는 attribute 설정하지 않음
+        // false인 경우도 attribute 제거
+        $el.removeAttribute(attrName);
+      }
       return;
     }
 
