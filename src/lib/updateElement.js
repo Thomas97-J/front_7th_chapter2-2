@@ -14,11 +14,21 @@ function updateAttributes(target, originNewProps, originOldProps) {
 
   // 이전 props에서 새로운 props에 없는 것들 제거
   Object.entries(oldProps).forEach(([key]) => {
+    const oldValue = oldProps[key];
+
     if (key === "key" || key === "ref" || key === "children") {
       return;
     }
 
     if (!(key in newProps)) {
+      // ✅ 이벤트 핸들러 제거
+      if (key.startsWith("on")) {
+        const eventType = key.slice(2).toLowerCase();
+        removeEvent(target, eventType, oldValue); // ← oldValue 추가
+        return;
+      }
+
+      // 일반 속성 제거
       if (key === "className") {
         target.removeAttribute("class");
       } else if (key === "style") {
@@ -43,7 +53,7 @@ function updateAttributes(target, originNewProps, originOldProps) {
       const eventType = key.slice(2).toLowerCase();
       console.log("eventType:", eventType, newValue);
       if (oldValue) {
-        removeEvent(target, eventType);
+        removeEvent(target, eventType, oldValue);
       }
       if (newValue) {
         addEvent(target, eventType, newValue);

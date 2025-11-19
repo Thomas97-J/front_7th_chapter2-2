@@ -45,15 +45,12 @@ export function addEvent(element, eventType, handler) {
  * @param {string} eventType - 이벤트 타입
  * @param {Function} handler - 제거할 이벤트 핸들러
  */
-export function removeEvent(element, eventType) {
+
+export function removeEvent(element, eventType, handler) {
   // Step 1: 이벤트 타입 정규화
   const normalizedType = eventType.startsWith("on")
     ? eventType.slice(2).toLowerCase()
     : eventType.toLowerCase();
-
-  if (normalizedType === "keydown") {
-    console.log(`[removeEvent] keydown 제거`);
-  }
 
   // Step 2: 해당 요소의 핸들러 조회
   if (!eventHandlers.has(element)) {
@@ -65,11 +62,24 @@ export function removeEvent(element, eventType) {
     return;
   }
 
-  // ✅ 해당 이벤트의 모든 핸들러 제거 (새로운 함수가 등록될 예정)
-  handlers[normalizedType] = [];
+  // ✅ Step 3: handler가 전달된 경우 특정 핸들러만 제거
+  if (handler) {
+    handlers[normalizedType] = handlers[normalizedType].filter(
+      (h) => h !== handler,
+    );
+  } else {
+    // handler가 없으면 모든 핸들러 제거
+    handlers[normalizedType] = [];
+  }
 
-  if (normalizedType === "keydown") {
-    console.log(`[removeEvent] keydown 모든 핸들러 제거 완료`);
+  // Step 4: 핸들러 배열이 비어있으면 타입 자체를 삭제
+  if (handlers[normalizedType].length === 0) {
+    delete handlers[normalizedType];
+  }
+
+  // Step 5: 모든 이벤트 타입이 비어있으면 요소 자체를 삭제
+  if (Object.keys(handlers).length === 0) {
+    eventHandlers.delete(element);
   }
 }
 
